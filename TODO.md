@@ -1,7 +1,5 @@
 # TODOs
 
-- allow comments to config file
-- allow empty lines
 - allow in-place installations and removals
 - command to update the config file
 - generic config file for all options

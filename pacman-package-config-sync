@@ -93,7 +93,9 @@ fi
 
 
 # Read the package names from the file
-config_packages=$(sort "${CONFIG_FILE}")
+# Filter out comments and empty lines
+# Sort for later usage with `comm`
+config_packages=$(sed -E 's/\s*(#.*)?$//;/^$/d' "${CONFIG_FILE}" | sort)
 
 
 
