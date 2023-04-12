@@ -11,6 +11,7 @@ SILENT=false
 DRY_RUN=true
 NOCONFIRM=false
 PACMAN_OPTIONS=()
+REMOVE_ORPHANS=false
 
 
 
@@ -160,10 +161,12 @@ fi
 # === CLEANUP PHASE ===
 
 # Remove any packages, that are no longer necessary (e.g. orphans)
-unneded_packages=( $(pacman -Qnqdt | sort) )
-if [[ ${#unneded_packages[@]} -ne 0 ]]; then
-    [[ "${SILENT}"  == "false" ]] && echo "Removing unnecessary orphan packages:"
-    [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${unneded_packages[@]}"
-    [[ "${DRY_RUN}" == "false" ]] && sudo pacman -R "${PACMAN_OPTIONS[@]}" -s "${unneded_packages[@]}"
+if [[ "${REMOVE_ORPHANS}" == true ]]; then
+    unneded_packages=( $(pacman -Qnqdt | sort) )
+    if [[ ${#unneded_packages[@]} -ne 0 ]]; then
+        [[ "${SILENT}"  == "false" ]] && echo "Removing unnecessary orphan packages:"
+        [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${unneded_packages[@]}"
+        [[ "${DRY_RUN}" == "false" ]] && sudo pacman -R "${PACMAN_OPTIONS[@]}" -s "${unneded_packages[@]}"
+    fi
 fi
 
