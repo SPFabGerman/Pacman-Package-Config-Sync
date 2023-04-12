@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# TODO: make a git repo, allow comments to config file, allow empty lines, allow in-place installations and removals, update config command, generic config for options, make automatic backups of config file
-
 set -euo pipefail
 IFS=$'\n\t'
 
