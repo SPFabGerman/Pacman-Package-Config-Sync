@@ -8,6 +8,7 @@ GENERATE_CONFIG=false
 
 # Set default values for options
 SILENT=false
+SUPPRESS_PACKAGE_NAMES=true
 DRY_RUN=true
 NOCONFIRM=false
 PACMAN_OPTIONS=()
@@ -20,7 +21,7 @@ DO_UPDATES=true
 print_help() {
     echo "Usage: $0 [options]"
     echo "Options:"
-    echo "  -s, --silent         suppress output"
+    echo "  -s, --silent         suppress all output"
     echo "  -d, --dry-run        don't make any changes, only show what would be done"
     echo "  -c, --commit, --no-dry-run"
     echo "                       commit changes to the system, opposite of --dry-run"
@@ -125,14 +126,16 @@ to_mark_explicit=( $(comm -12 <(echo "${config_packages}") <(echo "${dependency_
 # Mark packages installed as dependencies as explicitly installed
 if [[ ${#to_mark_explicit[@]} -ne 0 ]]; then
     [[ "${SILENT}"  == "false" ]] && echo "Marking packages as explicitly installed:"
-    [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${to_mark_explicit[@]}"
+    [[ "${SILENT}"  == "false" ]] && ( [[ "${SUPPRESS_PACKAGE_NAMES}"  == "false" ]] || [[ "${DRY_RUN}" == "true" ]] ) \
+        && printf '  %s\n' "${to_mark_explicit[@]}"
     [[ "${DRY_RUN}" == "false" ]] && sudo pacman -D "${PACMAN_OPTIONS[@]}" --asexplicit "${to_mark_explicit[@]}"
 fi
 
 # Install any packages that aren't already installed
 if [[ ${#to_install[@]} -ne 0 ]]; then
     [[ "${SILENT}"  == "false" ]] && echo "Installing packages:"
-    [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${to_install[@]}"
+    [[ "${SILENT}"  == "false" ]] && ( [[ "${SUPPRESS_PACKAGE_NAMES}"  == "false" ]] || [[ "${DRY_RUN}" == "true" ]] ) \
+        && printf '  %s\n' "${to_install[@]}"
     [[ "${DRY_RUN}" == "false" ]] && sudo pacman -S "${PACMAN_OPTIONS[@]}" "${to_install[@]}"
 fi
 
@@ -156,14 +159,16 @@ to_dependency=( $(comm -23 <(echo "${installed_required_packages}") <(echo "${co
 # We mark as dependecies first and uninstall later, so that new dependecies are removed in the uninstall cleanup
 if [[ ${#to_dependency[@]} -ne 0 ]]; then
     [[ "${SILENT}"  == "false" ]] && echo "Marking packages as dependencies:"
-    [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${to_dependency[@]}"
+    [[ "${SILENT}"  == "false" ]] && ( [[ "${SUPPRESS_PACKAGE_NAMES}"  == "false" ]] || [[ "${DRY_RUN}" == "true" ]] ) \
+        && printf '  %s\n' "${to_dependency[@]}"
     [[ "${DRY_RUN}" == "false" ]] && sudo pacman -D "${PACMAN_OPTIONS[@]}" --asdeps "${to_dependency[@]}"
 fi
 
 # Remove any explicitly installed packages that aren't listed in the file
 if [[ ${#to_remove[@]} -ne 0 ]]; then
     [[ "${SILENT}"  == "false" ]] && echo "Removing packages:"
-    [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${to_remove[@]}"
+    [[ "${SILENT}"  == "false" ]] && ( [[ "${SUPPRESS_PACKAGE_NAMES}"  == "false" ]] || [[ "${DRY_RUN}" == "true" ]] ) \
+        && printf '  %s\n' "${to_remove[@]}"
     [[ "${DRY_RUN}" == "false" ]] && sudo pacman -R "${PACMAN_OPTIONS[@]}" -s "${to_remove[@]}"
 fi
 
@@ -176,7 +181,8 @@ if [[ "${REMOVE_ORPHANS}" == true ]]; then
     unneded_packages=( $(pacman -Qnqdt | sort) )
     if [[ ${#unneded_packages[@]} -ne 0 ]]; then
         [[ "${SILENT}"  == "false" ]] && echo "Removing unnecessary orphan packages:"
-        [[ "${SILENT}"  == "false" ]] && printf '  %s\n' "${unneded_packages[@]}"
+        [[ "${SILENT}"  == "false" ]] && ( [[ "${SUPPRESS_PACKAGE_NAMES}"  == "false" ]] || [[ "${DRY_RUN}" == "true" ]] ) \
+            && printf '  %s\n' "${unneded_packages[@]}"
         [[ "${DRY_RUN}" == "false" ]] && sudo pacman -R "${PACMAN_OPTIONS[@]}" -s "${unneded_packages[@]}"
     fi
 fi
