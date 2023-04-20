@@ -11,7 +11,9 @@ SILENT=false
 DRY_RUN=true
 NOCONFIRM=false
 PACMAN_OPTIONS=()
+# TODO: Change to true
 REMOVE_ORPHANS=false
+DO_UPDATES=true
 
 
 
@@ -97,6 +99,15 @@ fi
 # Filter out comments and empty lines
 # Sort for later usage with `comm`
 config_packages=$(sed -E 's/\s*(#.*)?$//;/^$/d' "${CONFIG_FILE}" | sort)
+
+
+# === UPDATE PHASE ===
+
+if [[ "${DO_UPDATES}" == "true" && "${DRY_RUN}" == "false" ]]; then
+    # No reason to output this message, when we do a dry-run, since we do no package checks here anyway.
+    [[ "${SILENT}"  == "false" ]] && echo "Updating packages:"
+    sudo pacman -Syu "${PACMAN_OPTIONS[@]}"
+fi
 
 
 
