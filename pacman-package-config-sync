@@ -3,8 +3,9 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/system-package-config/pacman-packages"
-GENERATE_CONFIG=false
+CONFIG_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/system-package-config/default-options"
+PACKAGE_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/system-package-config/pacman-packages"
+generate_package_config=false
 
 # Set default values for options
 SILENT=false
@@ -12,9 +13,8 @@ SUPPRESS_PACKAGE_NAMES=true
 DRY_RUN=true
 NOCONFIRM=false
 PACMAN_OPTIONS=()
-# TODO: Change to true
-REMOVE_ORPHANS=false
 DO_UPDATES=true
+REMOVE_ORPHANS=true
 
 
 
@@ -27,8 +27,12 @@ print_help() {
     echo "                       commit changes to the system, opposite of --dry-run"
     echo "  -n, --noconfirm      skip any confirmation prompts during execution"
     echo "  --doconfirm          do not skip any confirmation prompts during execution, opposite if --noconfirm"
-    echo "  --generate-config    generate a new configuration file"
-    echo "  --config-file <file> specify config file to use"
+    echo "  --config-file <file>"
+    echo "                       specify config file to use"
+    echo "  --generate-package-config"
+    echo "                       generate a new package file"
+    echo "  --package-file <file>"
+    echo "                       specify package file to use"
     echo "  -h, --help           show this help message"
 }
 
@@ -50,11 +54,19 @@ while [[ $# -gt 0 ]]; do
         --doconfirm)
             NOCONFIRM=false
             ;;
-        --generate-config)
-            GENERATE_CONFIG=true
-            ;;
         --config-file)
             CONFIG_FILE="$2"
+            shift
+            if [[ ! -f "${CONFIG_FILE}" ]]; then
+                echo "Config file could not be found!"
+                exit 1
+            fi
+            ;;
+        --generate-package-config)
+            generate_package_config=true
+            ;;
+        --package-file)
+            PACKAGE_FILE="$2"
             shift
             ;;
         -h|--help)
@@ -69,6 +81,12 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+# Load custom config, if it exists
+if [[ -f "${CONFIG_FILE}" ]]; then
+    [[ "${SILENT}"  == "false" ]] && echo "Use config file at ${CONFIG_FILE}"
+    source ${CONFIG_FILE}
+fi
+
 # Ensure that option is only added once
 if [[ "${NOCONFIRM}" == true ]]; then
     PACMAN_OPTIONS+="--noconfirm"
@@ -76,21 +94,21 @@ fi
 
 
 
-# Generate config now (after flag parsing), since the CONFIG_FILE variable may have changed because of flags
-if [[ "${GENERATE_CONFIG}" == "true" ]]; then
-    if [[ -f "${CONFIG_FILE}" ]]; then
+# Generate config now (after flag parsing), since the PACKAGE_FILE variable may have changed because of flags
+if [[ "${generate_package_config}" == "true" ]]; then
+    if [[ -f "${PACKAGE_FILE}" ]]; then
         echo "Error: package config file already exists! Aborting."
         exit 1
     fi
-    mkdir -p "$(dirname ${CONFIG_FILE})"
-    pacman -Qnqe > "${CONFIG_FILE}"
-    echo "Default config file created at ${CONFIG_FILE}"
+    mkdir -p "$(dirname ${PACKAGE_FILE})"
+    pacman -Qnqe > "${PACKAGE_FILE}"
+    echo "Default package config file created at ${PACKAGE_FILE}"
     exit 0
 fi
 
 # Check that package config file exists
-if [[ ! -f "${CONFIG_FILE}" ]]; then
-    echo "Error: package config file not found at ${CONFIG_FILE}"
+if [[ ! -f "${PACKAGE_FILE}" ]]; then
+    echo "Error: package config file not found at ${PACKAGE_FILE}"
     exit 1
 fi
 
@@ -99,7 +117,7 @@ fi
 # Read the package names from the file
 # Filter out comments and empty lines
 # Sort for later usage with `comm`
-config_packages=$(sed -E 's/\s*(#.*)?$//;/^$/d' "${CONFIG_FILE}" | sort)
+config_packages=$(sed -E 's/\s*(#.*)?$//;/^$/d' "${PACKAGE_FILE}" | sort)
 
 
 # === UPDATE PHASE ===
