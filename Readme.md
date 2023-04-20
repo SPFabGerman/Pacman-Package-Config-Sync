@@ -27,7 +27,7 @@ This generates a new package file in `~/.config/system-package-config/pacman-pac
 
 You may also want to copy the default config file, named `default-options`, to `~/.config/system-package-config/default-options`.
 
-(This script uses XDG\_CONFIG\_HOME by default. Change the paths accordingly, if this is not `~/.config/` on your system.)
+(This script uses `XDG_CONFIG_HOME` by default. Change the paths accordingly, if this is not `~/.config/` on your system.)
 
 ### Use old package file
 
@@ -76,6 +76,7 @@ Some notable safety measure are:
 At the moment we only manage packages installed through pacman. There is no support for other package managers or packages installed from the AUR.
 But support for other package managers and distributions is planned to come eventually.
 My main focus right now is to get full support for one package manager (pacman) right and feature-complete.
+See also `TODO.md` for a list of planned features.
 
 Also im kinda in Proof-of-concepts phase right now.
 While the script is working as intended, I plan to eventually rewrite it in a real programming language to get rid of all the bash ballast.
